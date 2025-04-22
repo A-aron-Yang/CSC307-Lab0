@@ -39,10 +39,16 @@ const users = {
         }
     ]
 };
-
+//Step 4
 const findUserByName = (name) => {
     return users["users_list"].filter(
         (user) => user["name"] === name
+    );
+};
+//step 7
+const findUserByNameAndJob = (name, job) => {
+    return users["users_list"].filter(
+        (user) => user["name"] === name && user["job"] === job
     );
 };
 
@@ -53,21 +59,34 @@ const addUser = (user) => {
     users["users_list"].push(user);
     return user;
 };
-
+//DELETE
+const deleteUserById = (id) => {
+    users["users_list"] = users["users_list"].filter(
+        (user) => user["id"] !== id
+    );
+};
+//POST
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
     addUser(userToAdd);
     res.send();
 });
 
+//step 7
 app.get("/users", (req, res) => {
     const name = req.query.name;
-    if (name !== undefined) {
+    const job = req.query.job;
+
+    if (name !== undefined && job !== undefined) {
+        let result = findUserByNameAndJob(name, job);
+        result = { users_list: result };
+        res.send(result);
+    }else if (name !== undefined){
         let result = findUserByName(name);
         result = { users_list: result };
         res.send(result);
-    } else {
-        res.send(users);
+    } else{
+        res.send(users); //fallback if query params are missing
     }
 });
 
@@ -84,6 +103,12 @@ app.get("/users/:id", (req, res) => {
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
+
+app.delete("/users:id", (req, res) => {
+    const id = req.query.id;
+    deleteUserById(id);
+    res.send();
+})
 
 app.listen(port, () => {
     console.log(
