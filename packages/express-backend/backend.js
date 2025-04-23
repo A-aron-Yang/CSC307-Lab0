@@ -70,9 +70,10 @@ const deleteUserById = (id) => {
 };
 //POST
 app.post("/users", (req, res) => {
-    const userToAdd = req.body;
-    addUser(userToAdd);
-    res.send();
+    const user = req.body;
+    user.id = Math.random().toString(36).substring(2, 6);
+    users.users_list.push(user);
+    res.status(201).send(user);
 });
 
 //step 7
@@ -106,11 +107,16 @@ app.get("/users/:id", (req, res) => {
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
-
-app.delete("/users:id", (req, res) => {
-    const id = req.query.id;
-    deleteUserById(id);
-    res.send();
+//DELETE function
+app.delete("/users/:id", (req, res) => {
+    const id = req.params.id;
+    const index = users.users_list.findIndex(u => u.id === id);
+    if (index !== -1){
+        users.users_list.splice(index, 1);
+        res.status(204).send();
+    }else{
+        res.status(404).send("User not found.");
+    }
 })
 
 app.listen(port, () => {
