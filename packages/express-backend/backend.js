@@ -1,6 +1,7 @@
 // backend.js
 import express from 'express';
 import cors from 'cors';
+import userServices from "./user-services.js";
 
 const app = express();
 const port = 8000;
@@ -8,7 +9,7 @@ const port = 8000;
 app.use(cors());
 app.use(express.json());
 
-const users = {
+/*const users = {
     users_list: [
         {
             id: "xyz789",
@@ -41,7 +42,7 @@ const users = {
             "name": "Cindy"
         }
     ]
-};
+};*/
 //Step 4
 const findUserByName = (name) => {
     return users["users_list"].filter(
@@ -71,37 +72,30 @@ const deleteUserById = (id) => {
 //POST
 app.post("/users", (req, res) => {
     const user = req.body;
-    user.id = Math.random().toString(36).substring(2, 6);
-    users.users_list.push(user);
-    res.status(201).send(user);
+    userServices.addUser(req.body)
+        .then((newUser) => res.status(201).send(newUser)
+        .catch((error) => res.status(500).send(error)))
 });
 
-//step 7
+//step 7 GET name/job
 app.get("/users", (req, res) => {
-    const name = req.query.name;
-    const job = req.query.job;
-
-    if (name !== undefined && job !== undefined) {
-        let result = findUserByNameAndJob(name, job);
-        result = { users_list: result };
-        res.send(result);
-    }else if (name !== undefined){
-        let result = findUserByName(name);
-        result = { users_list: result };
-        res.send(result);
-    } else{
-        res.send(users); //fallback if query params are missing
-    }
+    const { name, job } = req.query;
+    userServices.getUsers(name, job)
+        .then((users) => res.send(users))
+        .catch((error) => res.status(500).send(error));
 });
-
+//GET users id
 app.get("/users/:id", (req, res) => {
-    const id = req.params["id"]; //or req.params.id
-    let result = findUserById(id);
-    if (result === undefined) {
-        res.status(404).send("Resource not found.");
-    } else {
-        res.send(result);
-    }
+    const id = req.params.id;
+    userServices.findUserById(id)
+        .then((user) => {
+            if (user) {
+                res.send(user);
+            } else {
+                res.status(404).send("User not found.");
+            }
+        })
+        .catch((error) => res.status(500).send(error));
 });
 
 app.get("/", (req, res) => {
@@ -110,13 +104,15 @@ app.get("/", (req, res) => {
 //DELETE function
 app.delete("/users/:id", (req, res) => {
     const id = req.params.id;
-    const index = users.users_list.findIndex(u => u.id === id);
-    if (index !== -1){
-        users.users_list.splice(index, 1);
-        res.status(204).send();
-    }else{
-        res.status(404).send("User not found.");
-    }
+    userServices.deleteUserById(id)
+        .then((deleteUser) => {
+            if(!deleteUser){
+                res.status(404).send("User not found.");
+            } else {
+                res.status(204).send();
+            }
+        })
+        .catch((error) => res.status(500).send(error))
 })
 
 app.listen(port, () => {

@@ -25,7 +25,7 @@ function MyApp(){
             .then((res) => {
                 if (res.status === 204) {
                     setCharacters(prevCharacters =>
-                        prevCharacters.filter(character => character.id !== id));
+                        prevCharacters.filter(c => c._id !== id));
                 } else {
                     throw new Error("Error deleting user");
                 }
